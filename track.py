@@ -9,6 +9,7 @@ os.environ["VECLIB_MAXIMUM_THREADS"] = "1"
 os.environ["NUMEXPR_NUM_THREADS"] = "1"
 
 import sys
+import shutil
 import platform
 import numpy as np
 from pathlib import Path
@@ -95,7 +96,10 @@ def run(
     else:  # multiple models after --yolo_weights
         exp_name = 'ensemble'
     exp_name = name if name else exp_name + "_" + reid_weights.stem
+
     save_dir = increment_path(Path(project) / exp_name, exist_ok=exist_ok)  # increment run
+    if os.path.exists(save_dir):
+        shutil.rmtree(save_dir)
     (save_dir / 'tracks' if save_txt else save_dir).mkdir(parents=True, exist_ok=True)  # make dir
 
     # Load model
@@ -352,6 +356,25 @@ def parse_opt():
     opt.imgsz *= 2 if len(opt.imgsz) == 1 else 1  # expand
     opt.tracking_config = ROOT / 'trackers' / opt.tracking_method / 'configs' / (opt.tracking_method + '.yaml')
     print_args(vars(opt))
+    
+    opt.yolo_weights = [WEIGHTS / 'yolov8n-seg.pt']
+    opt.reid_weights = WEIGHTS / 'osnet_x0_5_dukemtmc.pt'
+    opt.tracking_method = 'deepocsort'  # deepocsort, botsort, strongsort, ocsort, bytetrack
+    opt.source = "0"
+    # opt.source = "./video.mp4"
+    opt.name = 'exp'
+    opt.device = "0"
+    opt.classes = [0] # person
+    opt.show_vid = True
+    opt.save_vid = True
+    opt.save_crop = True
+    # opt.save_txt = True
+    # opt.save_conf = True
+    # opt.save_trajectories = True
+    opt.exist_ok = True
+    # opt.augment = True
+    # opt.visualize = True
+    
     return opt
 
 
